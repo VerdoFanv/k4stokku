@@ -18,13 +18,6 @@
 - Kemudian buat file `.env` pada root folder, kemudian isikan kode berikut
 ```
 NEXT_PUBLIC_BASE_URL="http://localhost:3000"
-ACCESS_TOKEN_KEY="918862cb0bf1cfc671fdcb93dfd1433fa16c1ac041dfeb211d998925e93a419e56e732c858861582f02ed7a61ac9713d909d9f779799553583335f3fc284385e"
-REFRESH_TOKEN_KEY="da2bb870a4389f259dc142efe7f6e6ece5ba1bc8af57e9bd3efdbae41ec7a417679ed4d843ad2d70e5e2889b0826266c9f6830db704252ad93dde4ca49d6dff6"
-
-# dev
-# DATABASE_URL="postgresql://postgres:2002@localhost:5432/k4stokku?schema=public"
-
-#prod
 DATABASE_URL="postgresql://postgres:RDuNHYu7VXNooe8l@db.krvwaunslytdcftkfhim.supabase.co:5432/postgres"
 
 SUPABASE_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtydndhdW5zbHl0ZGNmdGtmaGltIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY2MzQ2Mzg0NiwiZXhwIjoxOTc5MDM5ODQ2fQ.Ml8n7EveOG7wTDbwABaa6oaDQ_i0tPMKlsj5TCRrF-k
@@ -40,13 +33,6 @@ SUPABASE_API_URL=https://krvwaunslytdcftkfhim.supabase.co
 - Kemudian buat file `.env` pada root folder, kemudian isikan kode berikut
 ```
 NEXT_PUBLIC_BASE_URL="http://localhost:3000"
-ACCESS_TOKEN_KEY="918862cb0bf1cfc671fdcb93dfd1433fa16c1ac041dfeb211d998925e93a419e56e732c858861582f02ed7a61ac9713d909d9f779799553583335f3fc284385e"
-REFRESH_TOKEN_KEY="da2bb870a4389f259dc142efe7f6e6ece5ba1bc8af57e9bd3efdbae41ec7a417679ed4d843ad2d70e5e2889b0826266c9f6830db704252ad93dde4ca49d6dff6"
-
-# dev
-# DATABASE_URL="postgresql://postgres:2002@localhost:5432/k4stokku?schema=public"
-
-#prod
 DATABASE_URL="postgresql://postgres:RDuNHYu7VXNooe8l@db.krvwaunslytdcftkfhim.supabase.co:5432/postgres"
 
 SUPABASE_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtydndhdW5zbHl0ZGNmdGtmaGltIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY2MzQ2Mzg0NiwiZXhwIjoxOTc5MDM5ODQ2fQ.Ml8n7EveOG7wTDbwABaa6oaDQ_i0tPMKlsj5TCRrF-k
