@@ -7,22 +7,38 @@ import { useRouter } from "next/router"
 import { useForm } from "react-hook-form"
 import { AnimatePresence, motion } from "framer-motion"
 import Toast from "@components/toast/Toast.component"
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { fetcherDelete, fetcherPut } from "@utils/fetcher"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import Header from "@components/header/Header"
+import { RootAppContext } from "@contexts/RootAppContext"
 
 const prisma = new PrismaClient()
 const schema = yup.object({
 	nama: yup.string().required(`Nama is required`),
 })
 
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+	const jenisBarang = await prisma.jenisBarang.findUnique({
+		where: {
+			id: Number(params.typeId),
+		}
+	})
+
+	return {
+		props: {
+			jenisBarang
+		},
+	}
+}
+
 export default function MasterProductTypeNew({ jenisBarang }) {
 	const setForm = useForm({
 		resolver: yupResolver(schema)
 	})
 	const router = useRouter()
+	const { dispatch } = useContext(RootAppContext)
 	const { reset, handleSubmit, formState: { errors } } = setForm
 	const [ modal, setModal ] = useState(false)
 	const { breadcrumb } = useCurrentPath()
@@ -33,6 +49,7 @@ export default function MasterProductTypeNew({ jenisBarang }) {
 	})
 
 	const submit = async (data) => {
+		dispatch({ type: `set_loading`, payload: true })
 		delete data.id
 		await fetcherPut(`/api/jenisBarang?id=${jenisBarang.id}`, JSON.stringify(data))
 		setToast({
@@ -40,9 +57,11 @@ export default function MasterProductTypeNew({ jenisBarang }) {
 			visible: true,
 			message: `Berhasil mengubah jenis barang!`
 		})
+		dispatch({ type: `set_loading`, payload: false })
 	}
 
 	const deleteBarang = async () => {
+		dispatch({ type: `set_loading`, payload: true })
 		try {
 			await fetcherDelete(`/api/jenisBarang?id=${jenisBarang.id}`)
 			setModal(!modal)
@@ -55,6 +74,7 @@ export default function MasterProductTypeNew({ jenisBarang }) {
 			console.log(e)
 			setModal(!modal)
 		}
+		dispatch({ type: `set_loading`, payload: false })
 		router.push(breadcrumb[0])
 	}
 
@@ -67,7 +87,14 @@ export default function MasterProductTypeNew({ jenisBarang }) {
 			<Header
 				link={
 					<>
-						<Link href={`/`} passHref>Home</Link> / <Link href={`${breadcrumb[0]}`} passHref>Master Jenis Barang</Link> / <p className="active">{jenisBarang.nama}</p>
+						<Link
+							href={`${breadcrumb[0]}`}
+							onClick={() => {
+								dispatch({ type: `set_loading`, payload: true })
+								router.push(`/master-product-type`)
+							}}
+							passHref
+						>Master Jenis Barang</Link> / <p className="active">{jenisBarang.nama}</p>
 					</>
 				}
 				action={
@@ -108,25 +135,7 @@ export default function MasterProductTypeNew({ jenisBarang }) {
 					</motion.div>
 				)}
 			</AnimatePresence>
-			<Toast setClose={() => setToast({ ...toast, visible: false })} visible={toast.visible} message={toast.message} />
+			<Toast setClose={() => setToast({ ...toast, visible: false })} visible={toast.visible} message={toast.message} type={toast.type} />
 		</form>
 	)
-}
-
-MasterProductTypeNew.getLayout = function getLayout(page) {
-	return page
-}
-
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-	const jenisBarang = await prisma.jenisBarang.findUnique({
-		where: {
-			id: Number(params.typeId),
-		}
-	})
-
-	return {
-		props: {
-			jenisBarang
-		},
-	}
 }

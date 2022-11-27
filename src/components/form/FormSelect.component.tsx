@@ -2,7 +2,7 @@ import { Controller, UseFormReturn, FieldValues } from "react-hook-form"
 import ReactSelect from "react-select"
 
 interface Option {
-	value: string
+	value: string | number
 	label: string
 }
 interface Props {

@@ -13,7 +13,7 @@ import { RootAppContext } from "@contexts/RootAppContext"
 const schema = yup.object({
 	nama: yup.string().required(`Nama is required`),
 })
-export default function MasterProductTypeNew() {
+export default function ProductSupplierNew() {
 	const { breadcrumb } = useCurrentPath()
 	const { dispatch } = useContext(RootAppContext)
 	const setForm = useForm<any>({
@@ -33,22 +33,22 @@ export default function MasterProductTypeNew() {
 		dispatch({ type: `set_loading`, payload: true })
 		delete data.id
 
-		const jenisBarangs = await fetcherGet(`/api/jenisBarang`)
-		const isJenisBarangExists = jenisBarangs.data.filter((jb) => jb.nama.toLowerCase() === data.nama.toLowerCase())
+		const suppliers = await fetcherGet(`/api/supplier`)
+		const isSupplierExists = suppliers.data.filter((sp) => sp.nama.toLowerCase() === data.nama.toLowerCase())
 
 		try {
-			if (isJenisBarangExists.length > 0) {
+			if (isSupplierExists.length > 0) {
 				setToast({
 					type: `failed`,
 					visible: true,
-					message: `Gagal menambahkan jenis barang, Jenis barang sudah ada!`,
+					message: `Gagal menambahkan supplier, Supplier sudah ada!`,
 				})
 			} else {
-				await fetcherPost(`/api/jenisBarang`, JSON.stringify(data))
+				await fetcherPost(`/api/supplier`, JSON.stringify(data))
 				setToast({
 					...toast,
 					visible: true,
-					message: `Berhasil menambahkan jenis barang!`
+					message: `Berhasil menambahkan supplier!`
 				})
 			}
 			reset()
@@ -56,7 +56,7 @@ export default function MasterProductTypeNew() {
 			setToast({
 				...toast,
 				visible: true,
-				message: `Gagal menambahkan jenis barang, Jenis barang sudah ada!`,
+				message: `Gagal menambahkan supplier, Supplier sudah ada!`,
 				type: `failed`
 			})
 		}
@@ -64,7 +64,7 @@ export default function MasterProductTypeNew() {
 	}
 
 	return (
-		<form method="POST" onSubmit={handleSubmit(submit)} id="formDetailProduct" encType="multipart/form-data">
+		<form method="POST" onSubmit={handleSubmit(submit)} encType="multipart/form-data">
 			<Header
 				link={
 					<>
@@ -73,7 +73,7 @@ export default function MasterProductTypeNew() {
 							onClick={() => dispatch({ type: `set_loading`, payload
 							: true })}
 							passHref
-						>Master Jenis Barang</Link> / <p className="active">Add</p>
+						>Master Supplier</Link> / <p className="active">Add</p>
 					</>
 				}
 				action={
@@ -96,6 +96,6 @@ export default function MasterProductTypeNew() {
 	)
 }
 
-MasterProductTypeNew.getLayout = function getLayout(page) {
+ProductSupplierNew.getLayout = function getLayout(page) {
 	return page
 }

@@ -11,9 +11,6 @@ export default async function handler({ method, query, body }, res) {
 					mode: `insensitive`,
 				},
 			},
-			// orderBy: {
-			// 	updated_date: `asc`
-			// }
 		})
 
 		return res.status(200).json({ data: barangs })
@@ -24,6 +21,7 @@ export default async function handler({ method, query, body }, res) {
 		const barang = await prisma.barang.create({
 			data: {
 				...body,
+				stock: 0,
 				created_date: dateNow,
 				updated_date: dateNow
 			}

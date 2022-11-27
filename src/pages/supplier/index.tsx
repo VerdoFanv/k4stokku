@@ -6,7 +6,7 @@ import { GetServerSideProps } from "next"
 import Link from "next/link"
 import { useContext, useState } from "react"
 import { useForm } from "react-hook-form"
-import { JenisBarangAttribute } from "src/types/barang"
+import { Supplier } from "src/types/barang"
 
 // icon
 // import IconArrowDownMenu from "public/icons/icon-arrow-down-menu.svg"
@@ -31,7 +31,7 @@ const sortNama = (value1, value2) => {
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
 	const prisma = new PrismaClient()
-	const jenisBarang = await prisma.jenisBarang.findMany({
+	const supplier = await prisma.supplier.findMany({
 		where: {
 			nama: {
 				contains: query?.s ? String(query?.s) : ``,
@@ -42,22 +42,22 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
 
 	return {
 		props: {
-			jenisBarang: jenisBarang.sort(sortNama)
+			supplier: supplier.sort(sortNama)
 		},
 	}
 }
 
-export default function MasterProductType({ jenisBarang }: { jenisBarang: JenisBarangAttribute[] }) {
+export default function ProductSupplier({ supplier }: { supplier: Supplier[] }) {
 	const setForm = useForm()
 	const router = useRouter()
 	const { dispatch } = useContext(RootAppContext)
 	const { register, getValues } = setForm
 	const { currentPath } = useCurrentPath()
-	const [ data, setData ] = useState(jenisBarang)
+	const [ data, setData ] = useState(supplier)
 
 	const onSearchPress = async () => {
 		dispatch({ type: `set_loading`, payload: true })
-		const response = await fetcherGet(`/api/jenisBarang?s=${getValues(`searchProductName`)}`)
+		const response = await fetcherGet(`/api/supplier?s=${getValues(`searchSupplier`)}`)
 		setData(response.data.sort(sortNama))
 		dispatch({ type: `set_loading`, payload: false })
 	}
@@ -67,7 +67,7 @@ export default function MasterProductType({ jenisBarang }: { jenisBarang: JenisB
 			<Header
 				link={
 					<>
-						<p className="active">Master Jenis Barang</p>
+						<p className="active">Master Supplier</p>
 					</>
 				}
 				action={
@@ -77,7 +77,7 @@ export default function MasterProductType({ jenisBarang }: { jenisBarang: JenisB
 							className="flex items-center bg-amber-400 p-2 rounded-sm font-semibold hover:bg-amber-500 hover:text-white"
 							onClick={() => {
 								dispatch({ type: `set_loading`, payload: true })
-								router.push(`/master-product-type/new`)
+								router.push(`/supplier/new`)
 							}}
 						><FaPlus className="mr-2" />Tambah</li>
 					</ul>
@@ -86,18 +86,13 @@ export default function MasterProductType({ jenisBarang }: { jenisBarang: JenisB
 			<section className="search-product">
 				<div className="row">
 					<div className="form-input">
-						<input type="text" className="input" name="searchProductName" placeholder="Cari jenis barang" { ...register(`searchProductName`) } />
+						<input type="text" className="input" name="searchSupplier" placeholder="Cari supplier" { ...register(`searchSupplier`) } />
 						<button type="button" onClick={onSearchPress} className="button button-primary no-shadow">Cari <SlMagnifier className="icon" /></button>
 					</div>
 				</div>
 			</section>
 			<section className="flex justify-center mt-10">
 				<table>
-					{/* <thead>
-						<tr>
-							<th style={{ textAlign: `center` }}>JENIS</th>
-						</tr>
-					</thead> */}
 					<tbody>
 						{data.map((item, i) => (
 							<tr key={i} className="bg-gray-300 border-black">
@@ -129,6 +124,6 @@ export default function MasterProductType({ jenisBarang }: { jenisBarang: JenisB
 	)
 }
 
-MasterProductType.getLayout = function getLayout(page) {
+ProductSupplier.getLayout = function getLayout(page) {
 	return <Site>{page}</Site>
 }

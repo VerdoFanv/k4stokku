@@ -5,6 +5,7 @@ const prisma = new PrismaClient()
 const barangs = [
 	{
 		product_name: `Good Time Cookie Dus`,
+		code: `GTCD2123083123`,
 		stock: 100,
 		price: 1200,
 		asal: `Indo Grosir`,
@@ -20,6 +21,7 @@ const barangs = [
 	{
 		product_name: `Indomie Goreng 1 Dus`,
 		stock: 100,
+		code: `IGD2123083123`,
 		price: 118000,
 		asal: `Indo Grosir`,
 		jenis: `2`,

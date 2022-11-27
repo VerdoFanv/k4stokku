@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client"
 import { GetServerSideProps } from "next"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
-import { BarangAttribute, JenisBarangAttribute } from "src/types/barang"
+import { JenisBarangAttribute, Supplier } from "src/types/barang"
 import FormInput from "@components/form/FormInput.component"
 import FormTextarea from "@components/form/FormTextarea.component"
 import FormDatepicker from "@components/form/FormDatepicker.component"
@@ -12,39 +12,54 @@ import * as yup from "yup"
 import { fetcherPost } from "@utils/fetcher"
 import FormFile from "@components/form/FormFile.component"
 import Toast from "@components/toast/Toast.component"
-import { useState } from "react"
+import { useContext, useState } from "react"
 import { createClient } from "@supabase/supabase-js"
 import Header from "@components/header/Header"
+import { RootAppContext } from "@contexts/RootAppContext"
 
 const supabase = createClient(`https://krvwaunslytdcftkfhim.supabase.co`, `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtydndhdW5zbHl0ZGNmdGtmaGltIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY2MzQ2Mzg0NiwiZXhwIjoxOTc5MDM5ODQ2fQ.Ml8n7EveOG7wTDbwABaa6oaDQ_i0tPMKlsj5TCRrF-k`)
 
 const prisma = new PrismaClient()
 const schema = yup.object({
+	code: yup.string().required(`Kode is required`),
 	product_name: yup.string().required(`Nama is required`),
 	deskripsi: yup.string(),
-	stock: yup.number().integer().required(`Stok is required`),
 	price: yup.number().integer().required(`Harga Beli is required`),
 	harga_jual: yup.number().integer().required(`Harga jual is required`),
-	asal: yup.string(),
+	supplier_id: yup.string(),
 	jenis: yup.string().required(`Jenis is required`),
 	tanggal_beli: yup.date().required(`Tanggal Beli is required`),
 })
 
-export default function BarangDetail({ jenisBarang }: { barang: BarangAttribute, jenisBarang?: JenisBarangAttribute[] }) {
+export const getServerSideProps: GetServerSideProps = async () => {
+	const jenisBarang = await prisma.jenisBarang.findMany()
+	const supplier = await prisma.supplier.findMany()
+
+	return {
+		props: {
+			jenisBarang,
+			supplier
+		},
+	}
+}
+
+export default function BarangDetail({ jenisBarang, supplier }: { jenisBarang?: JenisBarangAttribute[], supplier: Supplier[] }) {
+	const { dispatch } = useContext(RootAppContext)
 	const setForm = useForm<any>({
 		defaultValues: {
 			product_name: ``,
 			deskripsi: ``,
-			stock: ``,
 			price: ``,
 			harga_jual: ``,
 			asal: ``,
+			supplier_id: null,
 			jenis: ``,
 			expired: null,
 			tanggal_beli: null,
 			gambar: ``
 		},
-		resolver: yupResolver(schema)
+		resolver: yupResolver(schema),
+		mode: `onChange`
 	})
 	const { handleSubmit, reset, formState: { errors } } = setForm
 	const [ toast, setToast ] = useState({
@@ -54,6 +69,7 @@ export default function BarangDetail({ jenisBarang }: { barang: BarangAttribute,
 	})
 
 	async function submit(data) {
+		dispatch({ type: `set_loading`, payload: true })
 		if (data.gambar) {
 			const filename = `image-${+new Date()}`
 			await supabase.storage.from(`uploads`).upload(filename, data.gambar)
@@ -76,6 +92,8 @@ export default function BarangDetail({ jenisBarang }: { barang: BarangAttribute,
 			})
 			reset()
 		}
+
+		dispatch({ type: `set_loading`, payload: false })
 	}
 
 	return (
@@ -83,7 +101,7 @@ export default function BarangDetail({ jenisBarang }: { barang: BarangAttribute,
 			<Header
 				link={
 					<>
-						<Link href={`/`} passHref>Home</Link> / <p className="active">Add Barang</p>
+						<Link href={`/`} onClick={() => dispatch({ type: `set_loading`, payload: true })} passHref>Home</Link> / <p className="active">Add Barang</p>
 					</>
 				}
 				action={
@@ -100,13 +118,13 @@ export default function BarangDetail({ jenisBarang }: { barang: BarangAttribute,
 					</div>
 					<div className="product-info">
 						<div className="row">
+							<FormInput setForm={setForm} name="code" placeholder="Masukkan kode produk ..." label="Kode*" error={errors?.code} />
+						</div>
+						<div className="row">
 							<FormInput setForm={setForm} name="product_name" placeholder="Masukkan nama produk ..." label="Nama*" error={errors?.product_name} />
 						</div>
 						<div className="row">
 							<FormTextarea setForm={setForm} name="deskripsi" placeholder="Masukkan deskripsi ..." label="Deskripsi" error={errors?.deskripsi} />
-						</div>
-						<div className="row">
-							<FormInput setForm={setForm} name="stock" placeholder="Masukkan stok ..." label="Stok*" type="number" error={errors?.stock} />
 						</div>
 						<div className="row">
 							<FormInput setForm={setForm} name="price" placeholder="Masukkan Harga beli ..." label="Harga Beli*" type="number" error={errors?.price} />
@@ -115,7 +133,7 @@ export default function BarangDetail({ jenisBarang }: { barang: BarangAttribute,
 							<FormInput setForm={setForm} name="harga_jual" placeholder="Masukkan Harga jual ..." label="Harga Jual*" type="number" error={errors?.harga_jual} />
 						</div>
 						<div className="row">
-							<FormInput setForm={setForm} name="asal" placeholder="Masukkan asal ..." label="Asal" error={errors?.asal} />
+							<FormSelect setForm={setForm} name="supplier_id" placeholder="Masukkan asal ..." label="Asal" error={errors?.supplier_id} options={supplier?.map((item => ({ value: item.id, label: item.nama })))} />
 						</div>
 						<div className="row">
 							<FormSelect setForm={setForm} options={jenisBarang.map((item => ({ value: String(item.id), label: item.nama })))} name="jenis" label="Jenis*" error={errors?.jenis} />
@@ -129,21 +147,11 @@ export default function BarangDetail({ jenisBarang }: { barang: BarangAttribute,
 					</div>
 				</div>
 			</div>
-			<Toast setClose={() => setToast({ ...toast, visible: false })} visible={toast.visible} message={toast.message} />
+			<Toast setClose={() => setToast({ ...toast, visible: false })} visible={toast.visible} message={toast.message} type={toast.type} />
 		</form>
 	)
 }
 
 BarangDetail.getLayout = function getLayout(page) {
 	return page
-}
-
-export const getServerSideProps: GetServerSideProps = async () => {
-	const jenisBarang = await prisma.jenisBarang.findMany()
-
-	return {
-		props: {
-			jenisBarang
-		},
-	}
 }

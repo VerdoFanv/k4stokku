@@ -13,6 +13,7 @@ generator client {
 
 model Barang {
   product_id Int @id @default(autoincrement())
+  code String? @unique
   product_name String
   stock Int
   price Int
@@ -25,6 +26,8 @@ model Barang {
   created_date String
   updated_date String
   gambar String?
+  supplier_id Int?
+  supplier Supplier? @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
 
   @@map("barang")
 }
@@ -34,4 +37,12 @@ model JenisBarang {
   nama String @unique
 
   @@map("jenis_barang")
+}
+
+model Supplier {
+  id Int @id @default(autoincrement())
+  nama String
+  barang Barang[]
+
+  @@map("supplier")
 }

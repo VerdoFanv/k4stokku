@@ -3,20 +3,20 @@ import { PrismaClient } from "@prisma/client"
 import { GetServerSideProps } from "next"
 import { useForm } from "react-hook-form"
 import { useContext, useEffect, useState } from "react"
-import { fetcherGet, fetcherPut } from "@utils/fetcher"
+import { fetcherDelete, fetcherGet, fetcherPut } from "@utils/fetcher"
 import Header from "@components/header/Header"
 
 // icon
 // import IconArrowDownMenu from "public/icons/icon-arrow-down-menu.svg"
 import { SlMagnifier } from "react-icons/sl"
 import { FaTimes, FaMinus, FaPlus } from "react-icons/fa"
+import { HiPencil } from "react-icons/hi"
 
 import { AnimatePresence, motion } from "framer-motion"
 import Toast from "@components/toast/Toast.component"
-import BottomMenuNavigation from "@components/navigation/BottomMenuNavigation.component"
 import { RootAppContext } from "@contexts/RootAppContext"
 import { useRouter } from "next/router"
-import { timeFromNow } from "@utils/date"
+import Link from "next/link"
 
 const prisma = new PrismaClient()
 
@@ -45,29 +45,39 @@ const sortExpired = (value1, value2) => {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
+	const supplier = await prisma.supplier.findUnique({
+		where: {
+			id: Number(query.supplierId),
+		}
+	})
 	const barangs = await prisma.barang.findMany({
 		where: {
 			product_name: {
 				contains: query?.s ? String(query?.s) : ``,
 				mode: `insensitive`
-			}
+			},
+			supplier_id: Number(query.supplierId)
 		}
 	})
 
 	return {
 		props: {
+			supplier,
 			barangs: barangs.sort(sortCreatedAt).sort(sortExpired)
 		},
 	}
 }
 
-export default function MainPage({ barangs }) {
+export default function SupplierBarangsDetail({ supplier, barangs }) {
+	const [ supplierData, setSupplierData ] = useState(supplier)
 	const setForm = useForm()
 	const router = useRouter()
 	const { state, dispatch } = useContext(RootAppContext)
-	const { register, getValues } = setForm
+	const { register, getValues, setValue } = setForm
 	const [ data, setData ] = useState([])
+	const [ modal, setModal ] = useState(false)
 	const [ changeStockPopup, setChangeStockPopup ] = useState(false)
+	const [ editSupplier, setEditSupplier ] = useState(false)
 	const [ selectedBarang, setSelectedBarang ] = useState(null)
 	const [ toast, setToast ] = useState({
 		visible: false,
@@ -78,7 +88,7 @@ export default function MainPage({ barangs }) {
 	const onSearchPress = async () => {
 		dispatch({ type: `set_loading`, payload: true })
 		const response = await fetcherGet(`/api/barang?s=${getValues(`searchProductName`)}`)
-		setData(response.data.sort(sortCreatedAt).sort(sortExpired))
+		setData(response.data.filter((item) => item.supplier_id === supplier.id).sort(sortCreatedAt).sort(sortExpired))
 		dispatch({ type: `set_loading`, payload: false })
 	}
 
@@ -87,9 +97,23 @@ export default function MainPage({ barangs }) {
 			dispatch({ type: `set_loading`, payload: true })
 		} else {
 			setData(barangs)
+			setValue(`supplier_name`, supplier.nama)
 			dispatch({ type: `set_loading`, payload: false })
 		}
 	}, [ barangs ])
+
+	const deleteSupplier = async () => {
+		dispatch({ type: `set_loading`, payload: true })
+		try {
+			await fetcherDelete(`/api/supplier?id=${supplier.id}`)
+			setModal(!modal)
+		} catch (e) {
+			console.log(e)
+			setModal(!modal)
+		}
+		dispatch({ type: `set_loading`, payload: false })
+		router.push(`/supplier`)
+	}
 
 	const onChangeStock = (barang: any) => {
 		setChangeStockPopup(!changeStockPopup)
@@ -134,21 +158,46 @@ export default function MainPage({ barangs }) {
 		setSelectedBarang(null)
 	}
 
+	const handleSave = async () => {
+		dispatch({ type: `set_loading`, payload: true })
+		setEditSupplier(!editSupplier)
+		try {
+			await fetcherPut(`/api/supplier?id=${supplier.id}`, JSON.stringify({
+				nama: getValues(`supplier_name`)
+			}))
+			setSupplierData({
+				...supplierData,
+				nama: getValues(`supplier_name`)
+			})
+			setToast({
+				...toast,
+				visible: true,
+				message: `Berhasil mengubah nama supplier!`,
+				type: `failed`
+			})
+		} catch (e) {
+			setToast({
+				...toast,
+				visible: true,
+				message: `Gagal mengubah nama supplier!`,
+				type: `failed`
+			})
+		}
+		dispatch({ type: `set_loading`, payload: false })
+	}
+
 	return (
 		<div>
 			<Header
-				link={<p className="active">Home</p>}
+				link={
+					<>
+						<Link href={`/supplier`} onClick={() => dispatch({ type: `set_loading`, payload: true })} passHref>Master Supplier</Link> / <p className="active">{supplierData?.nama}</p>
+					</>}
 				action={
-					<ul>
-						<li
-							style={{ cursor: `pointer`, transition: `.3s ease` }}
-							className="flex items-center bg-amber-400 p-2 rounded-sm font-semibold hover:bg-amber-500 hover:text-white"
-							onClick={() => {
-								router.push(`/barang/new`)
-								dispatch({ type: `set_loading`, payload: true })
-							}}
-						><FaPlus className="mr-2" />Tambah</li>
-					</ul>
+					<>
+						<button className="flex items-center rounded-sm justify-center font-semibold py-2 px-3 bg-amber-400" onClick={() => setEditSupplier(!editSupplier)} id="btnDelete">Ubah <HiPencil className="pl-1 text-2xl" /></button>
+						<button className="button button-delete" onClick={() => setModal(!modal)} id="btnDelete" type="button">Hapus</button>
+					</>
 				}
 			/>
 			<section className="search-product">
@@ -162,28 +211,12 @@ export default function MainPage({ barangs }) {
 			<div className={`px-6 mx-auto ${state.loading ? `loading` : ``}`}>
 				<div className="grid xl:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-1">
 					{data.length > 0 && (
-						data.map((barang, i) => <Card key={i} onChangeStock={onChangeStock} barang={barang} linkToPath="/barang" />)
+						data.map((barang, i) => <Card key={i} onChangeStock={onChangeStock} barang={barang} linkToPath={`/supplier/${supplier.id}`} />)
 					)}
 				</div>
 			</div>
-			<BottomMenuNavigation
-				navs={
-					[
-						{
-							link: `/`,
-							name: `Home`
-						},
-						{
-							link: `/master-product-type`,
-							name: `Jenis Barang`
-						},
-						{
-							link: `/supplier`,
-							name: `Supplier`
-						}
-					]
-				}
-			/>
+
+			{/* change stock modal */}
 			<AnimatePresence>
 				{changeStockPopup && (
 					<motion.div
@@ -217,6 +250,61 @@ export default function MainPage({ barangs }) {
 							<div className="flex justify-center mt-10 mb-4 disable-user-select">
 								<button className="text-white bg-cyan-700 w-9/12 font-medium p-1 rounded-sm" style={{ cursor: `pointer` }} onClick={handleChangeStock}>Simpan</button>
 							</div>
+						</div>
+					</motion.div>
+				)}
+			</AnimatePresence>
+
+			{/* edit supplier name modal */}
+			<AnimatePresence>
+				{editSupplier && (
+					<motion.div
+						className="fixed flex inset-0 items-center justify-center"
+						style={{ backgroundColor: `rgba(200, 200, 200, 0.5)`, zIndex: 12 }}
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0, transition: { ease: `easeIn` } }}
+						transition={{
+							x: { duration: 0.2 },
+							ease: `easeOut`
+						}}
+					>
+						<div className="flex flex-col bg-white p-4 rounded-md">
+							<div className="flex mb-5 items-center">
+								<FaTimes className="text-xl" style={{ cursor: `pointer` }} onClick={() => setEditSupplier(!editSupplier)} />
+								<p className="ml-8 text-xl font-bold">Ubah Nama</p>
+							</div>
+							<div className="flex items-center">
+								<p className="mr-4">Nama Supplier</p>
+								<div className="flex items-center rounded-md disable-user-select w-96">
+									<input type="text" className="w-full font-medium disable-user-select" {...register(`supplier_name`)} />
+								</div>
+							</div>
+							<div className="flex justify-center mt-10 mb-4 disable-user-select">
+								<button className="text-white bg-cyan-700 w-9/12 font-medium p-1 rounded-sm" style={{ cursor: `pointer` }} onClick={handleSave}>Simpan</button>
+							</div>
+						</div>
+					</motion.div>
+				)}
+			</AnimatePresence>
+
+			{/* delete supplier modal */}
+			<AnimatePresence>
+				{modal && (
+					<motion.div
+						className="modal-dialog"
+						initial={{ opacity: 0, scale: 0 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 1, scale: 0, transition: { ease: `backIn` } }}
+						transition={{
+							x: { duration: 0.2 },
+							ease: `backOut`
+						}}
+					>
+						<p>Apakah anda yakin ingin menghapusnya ?</p>
+						<div className="action-dialog">
+							<button className="agree" type="button" name="delete" onClick={deleteSupplier}>Ya</button>
+							<button className="cancel" onClick={() => setModal(!modal)} type="button">Tidak</button>
 						</div>
 					</motion.div>
 				)}

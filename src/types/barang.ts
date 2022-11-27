@@ -18,3 +18,5 @@ export interface JenisBarangAttribute {
 	id: number
 	nama: string
 }
+
+export interface Supplier extends JenisBarangAttribute {}
