@@ -101,7 +101,7 @@ export default function MasterProductType({ jenisBarang }: { jenisBarang: JenisB
 					<tbody>
 						{data.map((item, i) => (
 							<tr key={i} className="bg-gray-300 border-black">
-								<td style={{ textAlign: `center` }} className="px-72 py-2"><Link href={`${currentPath}/${item.id}`} className="text-black font-medium">{item.nama}</Link></td>
+								<td style={{ textAlign: `center` }} className="px-72 py-2"><Link href={`${currentPath}/${item.id}`} onClick={() => dispatch({ type: `set_loading`, payload: true })} className="text-black font-medium">{item.nama}</Link></td>
 							</tr>
 						))}
 					</tbody>
