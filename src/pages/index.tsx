@@ -76,11 +76,10 @@ export default function MainPage({ barangs }) {
 	})
 
 	const onSearchPress = async () => {
-		// dispatch({ type: `set_loading`, payload: true })
-		// const response = await fetcherGet(`/api/barang?s=${getValues(`searchProductName`)}`)
-		// setData(response.data.sort(sortCreatedAt).sort(sortExpired))
-		// dispatch({ type: `set_loading`, payload: false })
-		// window.open(``)
+		dispatch({ type: `set_loading`, payload: true })
+		const response = await fetcherGet(`/api/barang?s=${getValues(`searchProductName`)}`)
+		setData(response.data.sort(sortCreatedAt).sort(sortExpired))
+		dispatch({ type: `set_loading`, payload: false })
 	}
 
 	useEffect(() => {
@@ -157,7 +156,6 @@ export default function MainPage({ barangs }) {
 					<div className="form-input">
 						<input type="text" className="input" name="searchProductName" placeholder="Cari barang" { ...register(`searchProductName`) } />
 						<button type="button" onClick={onSearchPress} className="button button-primary no-shadow">Cari <SlMagnifier className="icon" /></button>
-						<a href="https://icantixnco.com/link/oapp/NjU1P291dGxldD0xNyZsaW5rX3RvPXByb2R1Y3RJQ0FOVElYLTEyMzQhQCM=">Tekan saya</a>
 					</div>
 				</div>
 			</section>
