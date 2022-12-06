@@ -80,7 +80,7 @@ export default function MainPage({ barangs }) {
 		// const response = await fetcherGet(`/api/barang?s=${getValues(`searchProductName`)}`)
 		// setData(response.data.sort(sortCreatedAt).sort(sortExpired))
 		// dispatch({ type: `set_loading`, payload: false })
-		window.open(`https://icantixnco.com/link/oapp/dasdahdjasdauhdsu`)
+		window.open(`https://icantixnco.com/link/oapp/NjU1P291dGxldD0xNyZsaW5rX3RvPXByb2R1Y3RJQ0FOVElYLTEyMzQhQCM=`)
 	}
 
 	useEffect(() => {
